@@ -73,7 +73,7 @@ Helm has a few conventions around how it discovers helm charts online. Similar t
 We distribute the entire Agave Platform primarily with 2 charts: [core-services Helm chart](https://github.com/agaveplatform/helm-charts) and [auth-services Helm chart](https://github.com/agaveplatform/helm-charts). Today, we will talk about the [core-services Helm chart](https://github.com/agaveplatform/helm-charts).  
 
 #### Chart Contents
-> All you want and need to know about Chart structure is availalbe in the [Chart guide](https://docs.helm.sh/docs/topics/charts/)
+> All you want and need to know about Chart structure is available in the [Chart guide](https://docs.helm.sh/docs/topics/charts/)
 
 Before we do anything, let's add the repo to our local helm cache
 ```bash
@@ -101,7 +101,7 @@ Looking at our chart templates directory, we define some secrets and configs for
 The `Chart.yaml` describes our service metadata and includes a list of other Helm charts upon which this one relies. We ship most of those charts as subcharts bundled together with the parent, which is perfectly fine. Other charts are listed as dependencies, but are not present in our `charts` directory. Like all dependency managers, Helm will resolve and fetch these charts as part of a normal chart install or upgrade. We can force this behavior up front in case we need to reference the contents while we're developing our chart.
 
 ```bash
-$ helm3 dependency update k8sops-training/helm/core-services/
+$ helm dependency update k8sops-training/helm/core-services/
 ```
 You should see output resembling
 
@@ -256,7 +256,7 @@ telepresence intercept core-services-jobs \
     --env-file agavedev-telepresence-jobs.env \
     --docker-run -i -t \
         --env-file agavedev-telepresence-jobs.env \
-        -e ENABLE_REMOTE_DEBUG=1
+        -e ENABLE_REMOTE_DEBUG=1 \
         -p 80:80 \
         -p 10001:10001 \
         -p 10002:10002 \
@@ -272,3 +272,56 @@ telepresence intercept core-services-jobs \
 ### Handling volumes
 
 ***TODO: This is important, but we'll leave it for later.***
+
+## Auth Services
+To deploy a full version of the Agave Platform, you will need to install the `agave/auth-services` Helm chart in the same namespace as you deployed the `agave/core-services` Chart. 
+
+### Configuration
+
+A valid sandbox tenant will deploy out of the box using the default settings. For external accessibility, you should edit the default Helm chart values with base url, tenant, and email settings to match your environment.
+
+#### Tenant
+
+The externally accessible domain name must be provided to the tenant for the chart to deploy and work properly. The domain name will be used to create a Kubernetes Ingress resource and ssl cert for your tenant. Updated the following fields for your environment and save to a file named `auth-services-values.yml`.  
+
+> _**NOTE:** The Helm chart assumes you have [cert-manager](https://cert-manager.io/) installed in your cluster. To disable this behavior, set `ingress.certManager.enable: "false"` and provide a set of ssl certificates in a Secret named `{{ .Release.Name }}-cert-tls` in the target $NAMESPACE._
+
+```yaml
+global:
+  baseUrl: agave.example.com
+  
+tenant:
+  name: Agave Tenant
+  baseUrl: agave.example.com
+  contact:
+    - name: Agave Admin
+      email: admin@example.com
+```
+
+#### Email
+An internal [maildev]() relay server is used by default. In order for email to reach external users, you will have to configure an external SMTP server such as Gmail, Outlook, SendGrid, MailGun, Amazon SES, etc. Update the Helm chart's `email.smtp` block with the connection information for your SMTP server and append to your `auth-services-values.yml` file.
+
+> _**NOTE:** For many commercial email providers, you will have to verify your domain either via DNS or offline mechanisms to avoid aggress junk mail filtering, and source filters from your mail provider._
+
+```yaml
+email:
+  smtp:
+    host: <your smtp server hostname/ip address>
+    auth: "true"
+    port: 587
+    username: <your username/email handle>
+    password: <your password/api key>
+    fromName: Agave Notifier
+    fromAddress: "no-reply@example.com"
+```
+
+### Helm Install
+
+Once again, we will work out of your own namespace for this tutorial. Unlike with the core-services chart, we will pass our custom values the `helm install` command as a yaml file. We will install the `agave/auth-services` chart in the same `$NAMESPACE` as the `agave/core-services` chart.
+
+```
+helm install auth-services "$DIR/auth-services" \
+    --namespace $NAMESPACE \
+    --dependency-update \
+    --values auth-services-values.yml
+```
