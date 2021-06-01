@@ -325,3 +325,5 @@ helm install auth-services "$DIR/auth-services" \
     --dependency-update \
     --values auth-services-values.yml
 ```
+
+If your installation fails with the error "Error: failed post-install: job failed: BackoffLimitExceeded," then the issue is likely due to loopback and/or NodePort mapping issues on one of your k8s hosts. This job was attempting to register the Tenants, Tags, and Admin apis. You can do this manually through the APIM Publisher at: `https://{global.baseUrl}/publisher`. Once completed, the services are otherwise fully functional.
