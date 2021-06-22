@@ -158,7 +158,7 @@ helm install core-services "$DIR/core-services" \
     --namespace $NAMESPACE \
     --create-namespace \
     --dependency-update \
-    --set global.tenantBaseUrl="${NAMESPACE}.dev.k8s.agaveplatform.org" \ 
+    --set global.tenantBaseUrl="${NAMESPACE}.dev.k8s.agaveplatform.org" \
     --set global.baseUrl="core-${NAMESPACE}.dev.k8s.agaveplatform.org" \
     --set global.agaveVersion=${AGAVE_VERSION}
 ```
@@ -168,7 +168,7 @@ helm install core-services "$DIR/core-services" \
 ```
 helm upgrade --install core-services "$DIR/core-services" \
     --namespace $NAMESPACE \
-    --set global.tenantBaseUrl="${NAMESPACE}.dev.k8s.agaveplatform.org" \ 
+    --set global.tenantBaseUrl="${NAMESPACE}.dev.k8s.agaveplatform.org" \
     --set global.baseUrl="core-${NAMESPACE}.dev.k8s.agaveplatform.org" \
     --set global.agaveVersion=${AGAVE_VERSION} \
     --set metadata.replicaCount=2
