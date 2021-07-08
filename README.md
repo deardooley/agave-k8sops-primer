@@ -327,3 +327,14 @@ helm install auth-services "$DIR/auth-services" \
 ```
 
 If your installation fails with the error "Error: failed post-install: job failed: BackoffLimitExceeded," then the issue is likely due to loopback and/or NodePort mapping issues on one of your k8s hosts. This job was attempting to register the Tenants, Tags, and Admin apis. You can do this manually through the APIM Publisher at: `https://{global.baseUrl}/publisher`. Once completed, the services are otherwise fully functional.
+
+
+
+telepresence intercept auth-services-admin \
+    --namespace $NAMESPACE \
+    --port 5000 \
+    --env-file agavedev-telepresence-admin.env \
+    --docker-run -t \
+        --env-file agavedev-telepresence-admin.env \
+        -p 5000:5000 \
+        agaveplatform/admin-api:develop
